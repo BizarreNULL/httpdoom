@@ -13,6 +13,7 @@ using static System.Console;
 
 using HttpDoom.Core;
 using HttpDoom.Core.Records;
+using OpenQA.Selenium.DevTools;
 
 namespace HttpDoom.Console
 {
@@ -85,6 +86,10 @@ namespace HttpDoom.Console
                 {
                     Description = "Resolve the domain enumerating the nameservers (default is false)"
                 },
+                new Option<bool>(new[] {"--detect", "-d"})
+                {
+                    Description = "If will try to match Wappalyzer rules in every response (default is false)"
+                },
                 new Option<int>(new[] {"--max-allowed-redirect", "-aL"})
                 {
                     Description = "Set the limit of automatic redirects if -a is true (default is 4)"
@@ -116,8 +121,16 @@ namespace HttpDoom.Console
 
             if (!string.IsNullOrEmpty(options.Output) && Directory.Exists(options.Output))
             {
-                Logger.LogError("Output directory already exist!");
-                Environment.Exit(1);
+                Logger.LogInformational("Output directory already exist, want to continue? [y/N]");
+                Logger.LogWarning("Files can be rewritten!");
+                Write("> ");
+                var consoleKey = ReadKey();
+                if (consoleKey.Key != ConsoleKey.Y)
+                {
+                    Logger.LogError("Output directory already exist!");
+                    Environment.Exit(1);
+                }
+                WriteLine();
             }
 
             if (options.Screenshot && string.IsNullOrEmpty(options.Output))
@@ -186,7 +199,7 @@ namespace HttpDoom.Console
                 Logger.LogWarning("You are disabling automatic redirects, but with screenshots, chromedriver" +
                                   " will follow automatic redirects!");
             }
-
+            
             var domains = await File.ReadAllLinesAsync(options.WordList);
             var targets = domains
                 .Where(t => !string.IsNullOrEmpty(t))
@@ -238,7 +251,7 @@ namespace HttpDoom.Console
             var totalRequests = targetsWithPorts.Count;
             if (options.Screenshot) totalRequests *= 2;
             
-            Logger.LogInformational($"HttpDoom will do {totalRequests} request(s) plus redirects");
+            Logger.LogInformational($"HttpDoom will do at least {totalRequests} request(s)");
 
             var stopwatch = Stopwatch.StartNew();
             var tasks = targetsWithPorts

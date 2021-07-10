@@ -16,7 +16,8 @@ namespace HttpDoom.Core.Records
         bool IgnoreTls = true,
         bool Verbose = false,
         bool ShowDetails = false,
-        bool Resolve = false
+        bool Resolve = false,
+        bool Detect = false
     )
     {
         public List<int> Ports { get; set; } = new();

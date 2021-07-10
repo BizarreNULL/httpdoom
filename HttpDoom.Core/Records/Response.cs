@@ -7,17 +7,16 @@ namespace HttpDoom.Core.Records
 {
     public record Response
     {
-        public HttpResponseHeaders ResponseHeaders { get; set; }
-        public HttpRequestHeaders RequestHeaders { get; set; }
-        public HttpStatusCode StatusCode { get; set; }
-        public List<Cookie> Cookies { get; set; }
-        public Uri RedirectUri { get; set; }
-        public Uri OriginUri { get; set; }
-        public bool IsSuccessStatusCode { get; set; }
-        public string[] Addresses { get; set; }
-        public string Content { get; set; }
-        public string ContentSha256Sum { get; set; }
+        public HttpResponseHeaders ResponseHeaders { get; init; }
+        public HttpRequestHeaders RequestHeaders { get; init; }
+        public HttpStatusCode StatusCode { get; init; }
+        public List<Cookie> Cookies { get; init; }
+        public Uri RedirectUri { get; init; }
+        public Uri OriginUri { get; init; }
+        public bool IsSuccessStatusCode { get; init; }
+        public string[] Addresses { get; init; }
+        public string Content { get; init; }
+        public string ContentSha256Sum { get; init; }
         public string ScreenshotPath { get; set; }
-
     }
 }
