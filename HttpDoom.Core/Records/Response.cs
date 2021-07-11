@@ -13,6 +13,7 @@ namespace HttpDoom.Core.Records
         public List<Cookie> Cookies { get; init; }
         public Uri RedirectUri { get; init; }
         public Uri OriginUri { get; init; }
+        public List<DetectedTechnology> DetectedTechnologies { get; init; } = new();
         public bool IsSuccessStatusCode { get; init; }
         public string[] Addresses { get; init; }
         public string Content { get; init; }

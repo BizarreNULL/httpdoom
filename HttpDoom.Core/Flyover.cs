@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Diagnostics.CodeAnalysis;
-
+using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 using OpenQA.Selenium;
@@ -105,6 +105,8 @@ namespace HttpDoom.Core
             if (_options.Detect)
             {
                 await GetRulesAsync();
+                #region Rules Parsing and Minification
+
                 var json = await File.ReadAllTextAsync(RulesPath);
                 var fatRules = JsonConvert.DeserializeObject<Rules>(json);
                 if (fatRules == null) throw new NullReferenceException("Unable to deserialize Wappalyzer rules.");
@@ -140,9 +142,77 @@ namespace HttpDoom.Core
                         minifiedRule.Categories.Add(category);
                     });
                     
-                    // TODO: Define regular expressions exportation for minified model
+                    technology.HtmlExpressions.ToList().ForEach(he =>
+                    {
+                        minifiedRule.ContentExpressions.Add(he);
+                    });
                     
+                    technology.CookieExpressions.ToList().ForEach(he =>
+                    {
+                        // We are just ignoring the regular expression itself, and going
+                        // only for the cookie name for the given host.
+                        var (cookieName, _) = he;
+                        minifiedRule.SessionExpressions.Add(cookieName);
+                    });
+                    
+                    technology.HeaderExpressions.ToList().ForEach(he =>
+                    {
+                        // We are just ignoring the regular expression itself, and going
+                        // only for the header name for the given response.
+                        var (headerName, _) = he;
+                        minifiedRule.HeaderExpressions.Add(headerName);
+                    });
+                    
+                    technology.JavaScriptExpressions.ToList().ForEach(he =>
+                    {
+                        // We are just ignoring the regular expression itself, and going
+                        // only for the ECMA name for the given response.
+                        var (tag, _) = he;
+                        minifiedRule.ContentExpressions.Add(tag);
+                    });
+
                     rules.Add(minifiedRule);
+                });
+
+                #endregion
+                rules.ForEach(r =>
+                {
+                    r.ContentExpressions.ForEach(ce =>
+                    {
+                        if (!Regex.IsMatch(model.Content, ce)) return;
+                        
+                        var correlation = new DetectedTechnology
+                        {
+                            Vendor = r.Vendor,
+                            Website = r.VendorWebsite,
+                            IsOpenSource = r.IsOpenSource,
+                            Description = r.Description,
+                            Categories = r.Categories.Select(c => c.Name).ToList(),
+                            Implies = r.Implies
+                        };
+                            
+                        model.DetectedTechnologies.Add(correlation);
+                    });
+                    
+                    r.HeaderExpressions.ForEach(ce =>
+                    {
+                        var headers = string.Join("\n", model.ResponseHeaders.Select(h => 
+                            $"{h.Key}:{h.Value}"));
+                        
+                        if (!Regex.IsMatch(headers, ce)) return;
+                        
+                        var correlation = new DetectedTechnology
+                        {
+                            Vendor = r.Vendor,
+                            Website = r.VendorWebsite,
+                            IsOpenSource = r.IsOpenSource,
+                            Description = r.Description,
+                            Categories = r.Categories.Select(c => c.Name).ToList(),
+                            Implies = r.Implies
+                        };
+                            
+                        model.DetectedTechnologies.Add(correlation);
+                    });
                 });
             }
 

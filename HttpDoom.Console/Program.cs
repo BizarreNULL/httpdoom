@@ -382,6 +382,20 @@ namespace HttpDoom.Console
             WriteLine(response.Addresses.Any()
                 ? $" + With #{response.Addresses.Length} nameserver(s)"
                 : " + Without any resolved nameservers");
+
+            if (!response.DetectedTechnologies.Any())
+            {
+                WriteLine(" + Unable to detect any technologies");
+            }
+            else
+            {
+                var technologies = response.DetectedTechnologies
+                    .Select(dt => dt.Vendor)
+                    .Distinct();
+                var concatenated = string.Join(", ", technologies);
+                WriteLine($" + Got technology fingerprint for given target: {concatenated}");
+            }
+            
             ResetColor();
         }
     }
